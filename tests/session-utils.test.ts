@@ -34,8 +34,24 @@ describe('session utils + fixtures', () => {
     expect(commands[0]?.data).toContain('Windows IP Configuration');
   });
 
-  it('merges custom property slots', () => {
+  it('merges custom property slots from short arrays', () => {
     const merged = mergeCustomProperties(['a', 'b'], { '2': 'updated', '8': 'last' });
     expect(merged).toEqual(['a', 'updated', '', '', '', '', '', 'last']);
+    expect(merged).toHaveLength(8);
+  });
+
+  it('merges when upstream returns a map or non-array', () => {
+    expect(mergeCustomProperties(null, { '1': 'x' })).toEqual([
+      'x',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ]);
+    expect(mergeCustomProperties({ CustomProperty3: 'c' }, { '3': 'C' })[2]).toBe('C');
   });
 });
+

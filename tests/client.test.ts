@@ -19,6 +19,18 @@ describe('formatApiError', () => {
     expect(msg).toContain('Invalid anti-forgery token');
   });
 
+  it('redacts secrets in error bodies', () => {
+    const msg = formatApiError(
+      500,
+      'SendCommandToSession',
+      JSON.stringify({ message: 'failed password=hunter2 token=abc Bearer xyz.jwt' }),
+    );
+    expect(msg).not.toContain('hunter2');
+    expect(msg).not.toContain('xyz.jwt');
+    expect(msg).toContain('[redacted]');
+  });
+
+
   it('truncates HTML dumps', () => {
     const msg = formatApiError(500, 'GetSessionsByFilter', `<html>${'x'.repeat(2000)}</html>`);
     expect(msg.length).toBeLessThan(400);

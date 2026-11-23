@@ -5,6 +5,6 @@ import { createServer } from '../server.js';
 export async function startStdio(config: ServerConfig): Promise<void> {
   void serveStdio(() => createServer(config));
   console.error(
-    `screenconnect-mcp-server 0.1.0 on stdio (mode=${config.mode}, commands=${config.enableCommands})`,
+    `screenconnect-mcp-server 0.1.1 on stdio (mode=${config.mode}, commands=${config.enableCommands})`,
   );
 }

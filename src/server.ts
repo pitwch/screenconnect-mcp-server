@@ -13,7 +13,7 @@ export function createServer(config: ServerConfig = loadConfigFromEnv()): McpSer
   const server = new McpServer(
     {
       name: 'screenconnect-mcp-server',
-      version: '0.1.0',
+      version: '0.1.1',
     },
     { instructions: SERVER_INSTRUCTIONS },
   );
@@ -27,7 +27,7 @@ export function createServer(config: ServerConfig = loadConfigFromEnv()): McpSer
     inputSchema: z.object({}),
     handler: async () => ({
       name: 'screenconnect-mcp-server',
-      version: '0.1.0',
+      version: '0.1.1',
       mode: config.mode,
       enableCommands: config.enableCommands,
       enabledTiers: listEnabledTiers(config.mode, config.enableCommands),

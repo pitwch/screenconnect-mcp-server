@@ -70,11 +70,19 @@ export function formatApiError(status: number, method: string, body: string): st
           : 'upstream request failed without a detailed message';
   }
 
-  // Strip anything that looks like the shared secret if it somehow appeared.
-  reason = reason.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '[redacted]');
+  reason = redactErrorText(reason);
 
   const prefix = `ScreenConnect API error (HTTP ${status}) on ${method}`;
   return code ? `${prefix} [${code}]: ${reason}` : `${prefix}: ${reason}`;
+}
+
+/** Mask UUIDs, bearer tokens, and password-like assignments in error text. */
+export function redactErrorText(reason: string): string {
+  return reason
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
+    .replace(/\b(password|passwd|pwd|secret|token|apikey|api_key)\s*[=:]\s*\S+/gi, '$1=[redacted]')
+    .replace(/(-p|--password|--secret|--token)\s+\S+/gi, '$1 [redacted]')
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '[redacted]');
 }
 
 export function toApiError(status: number, method: string, body: string): ScreenConnectApiError {

@@ -92,16 +92,39 @@ export async function fetchSessionDetails(
   return details;
 }
 
-/** Normalize custom property slots 1..8 for UpdateSessionCustomProperties. */
+function slotValue(v: unknown): string {
+  if (typeof v === 'string') return v;
+  if (v == null) return '';
+  return String(v);
+}
+
+/**
+ * Normalize custom property slots 1..8 for UpdateSessionCustomProperties.
+ * Accepts an array (any length), a sparse/partial list, or an object map
+ * (`{ "1": "…" }` / `CustomProperty1`). Always returns exactly 8 strings.
+ */
 export function mergeCustomProperties(
   existing: unknown,
   patch: Record<string, string>,
 ): string[] {
-  const base = Array.isArray(existing)
-    ? existing.map((v) => (typeof v === 'string' ? v : ''))
-    : [];
-  while (base.length < 8) base.push('');
-  const next = base.slice(0, 8);
+  const next = ['', '', '', '', '', '', '', ''];
+
+  if (Array.isArray(existing)) {
+    for (let i = 0; i < Math.min(8, existing.length); i++) {
+      next[i] = slotValue(existing[i]);
+    }
+  } else if (existing && typeof existing === 'object') {
+    const o = existing as Record<string, unknown>;
+    for (let i = 1; i <= 8; i++) {
+      const v =
+        o[String(i)] ??
+        o[`CustomProperty${i}`] ??
+        o[`customProperty${i}`] ??
+        o[`CustomPropertyValues${i}`];
+      if (v !== undefined) next[i - 1] = slotValue(v);
+    }
+  }
+
   for (const [key, value] of Object.entries(patch)) {
     if (!/^[1-8]$/.test(key)) {
       throw new Error(`custom property slot must be 1..8 (got "${key}")`);

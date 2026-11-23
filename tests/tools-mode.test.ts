@@ -59,4 +59,13 @@ describe('tool registration by mode', () => {
     expect(names).toContain('send_toolbox_item');
     expect(names).toContain('create_session');
   });
+
+  it('marks create_session as destructiveHint for mcpproxy', () => {
+    const server = createServer(baseConfig({ mode: 'destructive', enableCommands: true }));
+    const tools = (server as unknown as { _registeredTools?: Record<string, { annotations?: { destructiveHint?: boolean; readOnlyHint?: boolean } }> })
+      ._registeredTools;
+    expect(tools?.create_session?.annotations?.destructiveHint).toBe(true);
+    expect(tools?.create_session?.annotations?.readOnlyHint).toBe(false);
+  });
 });
+
