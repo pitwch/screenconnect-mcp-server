@@ -1,0 +1,29 @@
+# Example mcpproxy upstream entry (stdio — recommended)
+# Adjust command path after npm run build / Docker image install.
+
+servers:
+  - name: screenconnect
+    # Prefer stdio so tools inherit mcpproxy read/write/destructive routing
+    # while this server also enforces SCREENCONNECT_MODE in-process.
+    command: node
+    args:
+      - /opt/screenconnect-mcp-server/dist/index.js
+    env:
+      SCREENCONNECT_BASE_URL: https://your-instance.example.com
+      SCREENCONNECT_API_SECRET: ${SCREENCONNECT_API_SECRET}
+      SCREENCONNECT_MODE: read
+      SCREENCONNECT_ENABLE_COMMANDS: "false"
+      SCREENCONNECT_ALLOWED_GROUPS: All Machines/Contoso
+    # annotations: expose only read tools to mcpproxy consumers initially
+    # read_only_only: true
+
+# Optional Docker (internal network / loopback only — do not publish publicly)
+#
+# services:
+#   screenconnect-mcp:
+#     image: ghcr.io/pitwch/screenconnect-mcp-server:0.1.0
+#     network_mode: "service:mcpproxy"   # or expose 127.0.0.1 only
+#     environment:
+#       SCREENCONNECT_BASE_URL: https://your-instance.example.com
+#       SCREENCONNECT_API_SECRET: ${SCREENCONNECT_API_SECRET}
+#       SCREENCONNECT_MODE: read
