@@ -8,3 +8,6 @@ coverage/
 .idea/
 .vscode/
 *.tsbuildinfo
+# Live captures from npm run capture-fixtures (may contain customer data)
+tests/fixtures/*.live.json
+*.live.json

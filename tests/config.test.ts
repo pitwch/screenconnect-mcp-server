@@ -54,4 +54,14 @@ describe('loadConfigFromEnv', () => {
       }),
     ).toThrow(/credentials/);
   });
+
+  it('rejects http base URLs', () => {
+    expect(() =>
+      loadConfigFromEnv({
+        ...baseEnv,
+        SCREENCONNECT_BASE_URL: 'http://control.example.com',
+      }),
+    ).toThrow(/https/);
+  });
 });
+

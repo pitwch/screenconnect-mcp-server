@@ -3,7 +3,10 @@ import * as z from 'zod/v4';
 import type { ServerConfig } from '../config.js';
 import { buildSessionFilter } from '../client/filter.js';
 import { getSharedClient } from '../client/screenconnect-client.js';
-import { filterSessionsByAllowlist } from '../policy/groups.js';
+import {
+  buildAllowlistFilterClause,
+  filterSessionsByAllowlist,
+} from '../policy/groups.js';
 import { paginate, READ_ONLY, registerGatedTool, sessionIdSchema } from './helpers.js';
 import {
   asSessionArray,
@@ -33,14 +36,24 @@ const searchFields = {
   offset: z.number().int().min(0).optional().default(0),
 };
 
+function combineFilters(...parts: Array<string | undefined>): string {
+  const cleaned = parts.map((p) => p?.trim()).filter((p): p is string => Boolean(p));
+  if (cleaned.length === 0) return 'GuestConnectedCount > -1';
+  if (cleaned.length === 1) return cleaned[0]!;
+  return cleaned.map((p) => `(${p})`).join(' AND ');
+}
+
 async function searchSessions(config: ServerConfig, args: z.infer<z.ZodObject<typeof searchFields>>) {
-  const filter = buildSessionFilter(args);
+  const userFilter = buildSessionFilter(args);
+  // Push allowlist into the upstream filter when configured, then re-check client-side.
+  const filter = combineFilters(userFilter, buildAllowlistFilterClause(config.allowedGroups));
   const client = getSharedClient(config);
   const body = await client.call<unknown>('GetSessionsByFilter', [filter]);
   const sessions = filterSessionsByAllowlist(config.allowedGroups, asSessionArray(body));
   const page = paginate(sessions.map(summarizeSession), args.limit ?? 50, args.offset ?? 0);
   return {
     filter,
+    allowlistApplied: config.allowedGroups.length > 0,
     ...page,
   };
 }
@@ -49,7 +62,7 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
   registerGatedTool(server, config, 'health_check', {
     title: 'Health check',
     description:
-      'Verify ScreenConnect reachability and CTRLAuthHeader authentication with a narrow GetSessionsByFilter probe.',
+      'Verify ScreenConnect reachability and CTRLAuthHeader authentication with a narrow GetSessionsByFilter probe. Does not return base URL or unfiltered inventory counts.',
     tier: 'read',
     annotations: READ_ONLY,
     method: 'GetSessionsByFilter',
@@ -57,16 +70,19 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
     handler: async (_args, cfg) => {
       const client = getSharedClient(cfg);
       const started = Date.now();
-      // Narrow probe: Access sessions (cheap relative to "everything").
-      const body = await client.call<unknown>('GetSessionsByFilter', ["SessionType = 'Access'"]);
-      const count = Array.isArray(body) ? body.length : body == null ? 0 : 1;
+      const probe = combineFilters(
+        "SessionType = 'Access'",
+        buildAllowlistFilterClause(cfg.allowedGroups),
+      );
+      const body = await client.call<unknown>('GetSessionsByFilter', [probe]);
+      const allowed = filterSessionsByAllowlist(cfg.allowedGroups, asSessionArray(body));
       return {
         ok: true,
         latencyMs: Date.now() - started,
-        baseUrl: cfg.baseUrl,
-        extensionId: cfg.extensionId,
         mode: cfg.mode,
-        sampleAccessSessionCount: count,
+        allowlistConfigured: cfg.allowedGroups.length > 0,
+        // Count only after allowlist filtering — never expose raw instance size.
+        sampleAccessSessionCount: allowed.length,
       };
     },
   });
@@ -74,7 +90,7 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
   registerGatedTool(server, config, 'list_sessions', {
     title: 'List sessions',
     description:
-      'List ScreenConnect sessions via GetSessionsByFilter. Prefer structured fields; use filter for advanced expressions.',
+      'List ScreenConnect sessions via GetSessionsByFilter. Prefer structured fields; use filter for advanced expressions. When SCREENCONNECT_ALLOWED_GROUPS is set, the allowlist is applied in the upstream filter and again client-side.',
     tier: 'read',
     annotations: READ_ONLY,
     method: 'GetSessionsByFilter',
@@ -85,7 +101,7 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
   registerGatedTool(server, config, 'search_sessions', {
     title: 'Search sessions',
     description:
-      'Search sessions by name, group, online status, OS, user, or raw filter (same backend as list_sessions).',
+      'Search sessions by name, group, online status, OS, user, or raw filter (same backend as list_sessions). Allowlist is enforced upstream and client-side when configured.',
     tier: 'read',
     annotations: READ_ONLY,
     method: 'GetSessionsByFilter',

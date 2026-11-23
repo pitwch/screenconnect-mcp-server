@@ -8,7 +8,7 @@ Sessions · Notes · Messages · Commands — with MSP-safe read / write / destr
 [![MCP](https://img.shields.io/badge/MCP-stdio-0ea5e9?style=flat-square)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
-[![version](https://img.shields.io/badge/version-0.1.0-6366f1?style=flat-square)](package.json)
+[![version](https://img.shields.io/badge/version-0.1.1-6366f1?style=flat-square)](package.json)
 [![by Pedrett IT+Web AG](https://img.shields.io/badge/by-Pedrett%20IT%2BWeb%20AG-0f172a?style=flat-square)](https://www.pitw.ch)
 
 Unofficial community project; not affiliated with or endorsed by ConnectWise.

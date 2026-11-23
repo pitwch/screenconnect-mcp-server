@@ -1,10 +1,9 @@
-# Example mcpproxy upstream entry (stdio — recommended)
+# Example mcpproxy upstream entry — stdio only for production.
+# Do not use MCP_TRANSPORT=http for tool routing (v0.1.x returns 501 for tools).
 # Adjust command path after npm run build / Docker image install.
 
 servers:
   - name: screenconnect
-    # Prefer stdio so tools inherit mcpproxy read/write/destructive routing
-    # while this server also enforces SCREENCONNECT_MODE in-process.
     command: node
     args:
       - /opt/screenconnect-mcp-server/dist/index.js
@@ -13,9 +12,11 @@ servers:
       SCREENCONNECT_API_SECRET: ${SCREENCONNECT_API_SECRET}
       SCREENCONNECT_MODE: read
       SCREENCONNECT_ENABLE_COMMANDS: "false"
+      # Full session-group paths only (not short tokens like "IT")
       SCREENCONNECT_ALLOWED_GROUPS: All Machines/Contoso
-    # annotations: expose only read tools to mcpproxy consumers initially
+    # Prefer mcpproxy read_only_only until write/destructive is approved
     # read_only_only: true
+
 
 # Optional Docker (internal network / loopback only — do not publish publicly)
 #

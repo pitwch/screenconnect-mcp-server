@@ -52,8 +52,8 @@ function normalizeBaseUrl(raw: string): string {
   } catch {
     throw new Error('SCREENCONNECT_BASE_URL must be a valid absolute URL');
   }
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-    throw new Error('SCREENCONNECT_BASE_URL must use http or https');
+  if (url.protocol !== 'https:') {
+    throw new Error('SCREENCONNECT_BASE_URL must use https:// (http is not allowed)');
   }
   if (url.username || url.password) {
     throw new Error('SCREENCONNECT_BASE_URL must not embed credentials');

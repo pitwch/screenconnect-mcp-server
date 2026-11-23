@@ -6,7 +6,6 @@ import { PolicyError } from '../client/errors.js';
 import {
   registerGatedTool,
   sessionIdSchema,
-  WRITE_CREATE,
   WRITE_IRREVERSIBLE,
 } from './helpers.js';
 import {
@@ -138,7 +137,7 @@ export function registerDestructiveTools(server: McpServer, config: ServerConfig
     description:
       '⚠ HIGH-IMPACT: create a Support/Meeting/Access session (CreateSession). Requires confirm=true.',
     tier: 'destructive',
-    annotations: WRITE_CREATE,
+    annotations: WRITE_IRREVERSIBLE,
     method: 'CreateSession',
     inputSchema: z.object({
       sessionType: z.enum(['Support', 'Meeting', 'Access']),
