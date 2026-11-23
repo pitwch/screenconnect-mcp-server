@@ -21,7 +21,7 @@
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-stdio-0ea5e9?style=flat-square" alt="MCP" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22c55e?style=flat-square" alt="MIT" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-20%2B-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 20+" /></a>
-  <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.2-6366f1?style=flat-square" alt="Version 0.1.2" /></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/version-0.1.3-6366f1?style=flat-square" alt="Version 0.1.3" /></a>
   <a href="https://www.pitw.ch"><img src="https://img.shields.io/badge/by-Pedrett%20IT%2BWeb%20AG-0f172a?style=flat-square" alt="Pedrett IT+Web AG" /></a>
 </p>
 

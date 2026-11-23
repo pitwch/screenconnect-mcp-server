@@ -1,0 +1,50 @@
+{
+  "Session": {
+    "SessionID": "11111111-1111-4111-8111-111111111111",
+    "Name": "TPVC-01",
+    "SessionType": 2,
+    "GuestNetworkAddress": "172.161.98.243",
+    "CustomPropertyValues": ["Teppich Quelle AG", "Critical", "", "", "", "", "", ""],
+    "GuestInfo": {
+      "OperatingSystemName": "Windows 11 Pro",
+      "LoggedOnUserName": "jdoe",
+      "LoggedOnUserDomain": "TEPPICH",
+      "PrivateNetworkAddress": "192.168.10.21",
+      "MachineName": "TPVC-01",
+      "GuestPublicKey": "SHOULD_REDACT_PUBLIC_KEY",
+      "WakeToken": "SHOULD_REDACT_WAKE",
+      "SerialNumber": "SN-SHOULD-REDACT",
+      "MacAddress": "AA:BB:CC:DD:EE:FF",
+      "GuestScreenshotContent": "iVBORw0KGgoAAAANSUhEUgAAA..."
+    }
+  },
+  "Connections": [
+    {
+      "ParticipantName": "jdoe",
+      "ProcessType": "Guest",
+      "NetworkAddress": "172.161.98.243"
+    }
+  ],
+  "Events": [
+    {
+      "EventType": 10,
+      "Time": "2026-11-20T08:00:00.000Z",
+      "Data": "Connected"
+    },
+    {
+      "EventType": 11,
+      "Time": "2026-11-20T08:30:00.000Z",
+      "Data": "Disconnected"
+    },
+    {
+      "EventType": 30,
+      "Time": "2026-11-20T08:10:00.000Z",
+      "Data": "https://example.com"
+    },
+    {
+      "EventType": 70,
+      "Time": "2026-11-20T08:05:00.000Z",
+      "Data": "Windows IP Configuration"
+    }
+  ]
+}

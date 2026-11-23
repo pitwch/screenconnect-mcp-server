@@ -12,6 +12,7 @@ import {
   fetchSessionById,
   fetchSessionDetails,
   mergeCustomProperties,
+  normalizeSession,
 } from './session-utils.js';
 
 export function registerWriteTools(server: McpServer, config: ServerConfig): void {
@@ -97,7 +98,7 @@ export function registerWriteTools(server: McpServer, config: ServerConfig): voi
     sessionIdFromArgs: (a) => a.sessionId,
     handler: async ({ sessionId, properties }, cfg) => {
       const details = await fetchSessionDetails(cfg, sessionId);
-      const existing = details.CustomPropertyValues ?? details.CustomProperties ?? [];
+      const existing = normalizeSession(details).customPropertySource;
       const merged = mergeCustomProperties(existing, properties);
       const client = getSharedClient(cfg);
       await client.call('UpdateSessionCustomProperties', [sessionId, merged]);

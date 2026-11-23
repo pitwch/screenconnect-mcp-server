@@ -5,13 +5,18 @@ import { buildSessionFilter } from '../client/filter.js';
 import { getSharedClient } from '../client/screenconnect-client.js';
 import {
   buildAllowlistFilterClause,
-  filterSessionsByAllowlist,
+  isGroupAllowed,
+  extractGroupCandidates,
 } from '../policy/groups.js';
 import { paginate, READ_ONLY, registerGatedTool, sessionIdSchema } from './helpers.js';
 import {
   asSessionArray,
   extractEvents,
   fetchSessionDetails,
+  normalizeEvent,
+  normalizeSession,
+  redactSensitiveFields,
+  sessionGroupFieldsFromRaw,
   summarizeSession,
 } from './session-utils.js';
 
@@ -45,15 +50,48 @@ function combineFilters(...parts: Array<string | undefined>): string {
 
 async function searchSessions(config: ServerConfig, args: z.infer<z.ZodObject<typeof searchFields>>) {
   const userFilter = buildSessionFilter(args);
-  // Push allowlist into the upstream filter when configured, then re-check client-side.
   const filter = combineFilters(userFilter, buildAllowlistFilterClause(config.allowedGroups));
   const client = getSharedClient(config);
   const body = await client.call<unknown>('GetSessionsByFilter', [filter]);
-  const sessions = filterSessionsByAllowlist(config.allowedGroups, asSessionArray(body));
-  const page = paginate(sessions.map(summarizeSession), args.limit ?? 50, args.offset ?? 0);
+  const rawSessions = asSessionArray(body);
+
+  const allowedRaw =
+    config.allowedGroups.length === 0
+      ? rawSessions
+      : rawSessions.filter((s) =>
+          isGroupAllowed(
+            config.allowedGroups,
+            extractGroupCandidates(sessionGroupFieldsFromRaw(s)),
+          ),
+        );
+
+  const summarized = allowedRaw.map((s) => {
+    const view = summarizeSession(s);
+    // onlineOnly was already applied upstream; if the payload omits counts but
+    // the filter required GuestConnectedCount > 0, mark connected.
+    if (args.onlineOnly && !view.guestConnected) {
+      return {
+        ...view,
+        guestConnected: true,
+        guestConnectedCount: Math.max(view.guestConnectedCount, 1),
+      };
+    }
+    return view;
+  });
+
+  const withGroupFields = summarized.filter((s) => s.groupFieldsPresent).length;
+  const page = paginate(summarized, args.limit ?? 50, args.offset ?? 0);
+
   return {
     filter,
     allowlistApplied: config.allowedGroups.length > 0,
+    groupFieldsPresentCount: withGroupFields,
+    groupFieldsWarning:
+      config.allowedGroups.length > 0 && withGroupFields === 0
+        ? 'SCREENCONNECT_ALLOWED_GROUPS is set but this instance returned no SessionGroupPath/GroupName fields. Allowlist cannot scope sessions — leave ALLOWED_GROUPS empty until group fields appear in API payloads.'
+        : withGroupFields === 0 && summarized.length > 0
+          ? 'Session group path/name fields are absent on this instance; groups[] will stay empty.'
+          : undefined,
     ...page,
   };
 }
@@ -75,13 +113,21 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
         buildAllowlistFilterClause(cfg.allowedGroups),
       );
       const body = await client.call<unknown>('GetSessionsByFilter', [probe]);
-      const allowed = filterSessionsByAllowlist(cfg.allowedGroups, asSessionArray(body));
+      const raw = asSessionArray(body);
+      const allowed =
+        cfg.allowedGroups.length === 0
+          ? raw
+          : raw.filter((s) =>
+              isGroupAllowed(
+                cfg.allowedGroups,
+                extractGroupCandidates(sessionGroupFieldsFromRaw(s)),
+              ),
+            );
       return {
         ok: true,
         latencyMs: Date.now() - started,
         mode: cfg.mode,
         allowlistConfigured: cfg.allowedGroups.length > 0,
-        // Count only after allowlist filtering — never expose raw instance size.
         sampleAccessSessionCount: allowed.length,
       };
     },
@@ -112,7 +158,7 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
   registerGatedTool(server, config, 'get_session_details', {
     title: 'Get session details',
     description:
-      'Get OS, logged-on user, IP/network address, custom properties, online status, and connection info for a session GUID.',
+      'Get OS, logged-on user, IP/network address, custom properties, online status, and connection info for a session GUID. Nested Session/GuestInfo payloads from the live API are flattened. includeRaw returns a redacted payload (keys, wake tokens, screenshots, serial/MAC stripped).',
     tier: 'read',
     annotations: READ_ONLY,
     method: 'GetSessionDetailsBySessionID',
@@ -122,16 +168,19 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
         .boolean()
         .optional()
         .default(false)
-        .describe('If true, include the raw upstream details payload'),
+        .describe(
+          'If true, include a redacted upstream details payload (secrets/hardware ids/screenshots removed)',
+        ),
     }),
     sessionIdFromArgs: (a) => a.sessionId,
     handler: async ({ sessionId, includeRaw }, cfg) => {
       const details = await fetchSessionDetails(cfg, sessionId);
+      const normalized = normalizeSession(details);
       return {
         ...summarizeSession(details),
-        eventCount: extractEvents(details).length,
-        connectionCount: Array.isArray(details.Connections) ? details.Connections.length : undefined,
-        ...(includeRaw ? { raw: details } : {}),
+        eventCount: normalized.events.length,
+        connectionCount: normalized.connections.length,
+        ...(includeRaw ? { raw: redactSensitiveFields(details) } : {}),
       };
     },
   });
@@ -139,7 +188,7 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
   registerGatedTool(server, config, 'get_session_events', {
     title: 'Get session events',
     description:
-      'Return recent session events from GetSessionDetailsBySessionID (the extension has no separate events endpoint).',
+      'Return recent session events from GetSessionDetailsBySessionID with readable eventTypeName (Connected, Disconnected, RanCommand, …).',
     tier: 'read',
     annotations: READ_ONLY,
     method: 'GetSessionDetailsBySessionID',
@@ -151,17 +200,16 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
     handler: async ({ sessionId, limit }, cfg) => {
       const details = await fetchSessionDetails(cfg, sessionId);
       const events = extractEvents(details);
-      // Prefer newest-first when timestamps exist; otherwise keep upstream order.
       const dated = events.map((ev, index) => {
-        const e = ev && typeof ev === 'object' ? (ev as Record<string, unknown>) : {};
-        const atRaw = e.Time ?? e.time ?? e.Timestamp ?? e.Created;
+        const normalized = normalizeEvent(ev);
+        const atRaw = normalized.at;
         const atMs =
           typeof atRaw === 'string'
             ? Date.parse(atRaw)
             : typeof atRaw === 'number'
               ? atRaw
               : Number.NaN;
-        return { ev, index, atMs };
+        return { normalized, index, atMs };
       });
       dated.sort((a, b) => {
         const aOk = Number.isFinite(a.atMs);
@@ -171,7 +219,7 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
         if (bOk) return 1;
         return b.index - a.index;
       });
-      const page = dated.slice(0, limit ?? 50).map((d) => d.ev);
+      const page = dated.slice(0, limit ?? 50).map((d) => d.normalized);
       return {
         sessionId,
         totalCount: events.length,

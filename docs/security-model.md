@@ -27,7 +27,9 @@ Empty allowlist = unrestricted (unsuitable for production MSP multi-tenant hosts
 
 Use **full group paths** such as `All Machines/Contoso`. Short tokens like `Machines` or `IT` do **not** match mid-path segments.
 
-Before production: confirm your instance returns `SessionGroupPath` / `GroupName` (or `GroupPath` / `SessionGroupName`) on session payloads — the allowlist depends on those fields.
+**Important (live API):** Some ScreenConnect builds do **not** return `SessionGroupPath` / `GroupName` on list or details payloads, and `SessionGroupPath` filters may match nothing. In that case leave `SCREENCONNECT_ALLOWED_GROUPS` **empty** — otherwise the allowlist will deny every session. List/search responses include `groupFieldsWarning` when group fields are absent.
+
+Before enabling the allowlist in production: confirm your instance returns group fields on session payloads (check `groupFieldsPresent` / `groups` on `search_sessions` or `get_session_details`).
 
 ## Audit log
 

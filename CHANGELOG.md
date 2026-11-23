@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3
+
+- Flatten nested live API payloads (`Session` / `GuestInfo`) for details, OS, user, IP, custom properties
+- Fix online status mapping (`IsGuestConnected`, nested counts; honor `onlineOnly` filter)
+- Warn when session group fields are absent — do not enable `ALLOWED_GROUPS` until they appear
+- `includeRaw` strips GuestPublicKey, WakeToken, screenshots, serial/MAC and truncates huge strings
+- `get_session_events` adds readable `eventTypeName` (Connected, Disconnected, RanCommand, …)
+
 ## 0.1.2
 
 - Audit logs keep `sessionId` readable; only free-text fields (e.g. command previews) are secret-redacted

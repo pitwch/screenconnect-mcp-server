@@ -110,12 +110,14 @@ curl -sS -X POST \
 | HTTP 404 | Wrong base URL or extension GUID / extension disabled |
 | HTML login page | URL does not hit the extension endpoint (check path / reverse proxy) |
 
-Inspect one object and confirm group fields used by the MCP allowlist, typically:
+Inspect one object. Nested details often look like `Session.GuestInfo.OperatingSystemName` — this MCP flattens those for tools.
+
+For the allowlist, confirm group fields exist:
 
 - `SessionGroupPath` and/or `GroupPath`
 - `GroupName` and/or `SessionGroupName`
 
-If those fields are empty on your build, `SCREENCONNECT_ALLOWED_GROUPS` cannot scope sessions correctly — fix or leave the allowlist empty only in tightly controlled labs.
+If those fields are **missing** on list/details (common on some builds), leave `SCREENCONNECT_ALLOWED_GROUPS` **empty**. Enabling it without group fields will block every session.
 
 ---
 

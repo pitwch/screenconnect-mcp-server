@@ -98,7 +98,9 @@ curl -sS -X POST \
 | HTTP 404 | Falsche Basis-URL / GUID / Extension deaktiviert |
 | HTML-Login | Endpoint wird nicht erreicht (Proxy/Pfad prüfen) |
 
-In einem Session-Objekt die Gruppenfelder prüfen (`SessionGroupPath` / `GroupName` o. Ä.) — davon hängt `SCREENCONNECT_ALLOWED_GROUPS` ab.
+Verschachtelte Details (z. B. `Session.GuestInfo.OperatingSystemName`) werden vom MCP flach gemappt.
+
+Gruppenfelder prüfen (`SessionGroupPath` / `GroupName`). Fehlen sie in Liste/Details (bei manchen Builds der Fall), `SCREENCONNECT_ALLOWED_GROUPS` **leer** lassen — sonst blockiert die Allowlist alle Sessions.
 
 ---
 
