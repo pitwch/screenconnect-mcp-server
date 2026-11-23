@@ -58,9 +58,9 @@ export class ScreenConnectClient {
       });
     } catch (err) {
       if (controller.signal.aborted) {
-        throw new Error(`Timeout after ${timeoutMs} ms on ${method}`);
+        throw new Error(`Timeout after ${timeoutMs} ms on ${method}`, { cause: err });
       }
-      throw err instanceof Error ? err : new Error(String(err));
+      throw err instanceof Error ? err : new Error(String(err), { cause: err });
     } finally {
       clearTimeout(timer);
     }
