@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.github
+.env
+.env.*
+coverage
+*.log
+tests
+scripts
+docs
+README.md
+README.de.md
