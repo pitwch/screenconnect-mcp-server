@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4
+
+- `includeRaw` also redacts `HardwareNetworkAddress` (MAC) and omits Events/Connections dumps
+- Map EventType 80–87 (CopiedFiles, SentFiles, ReceivedFiles, …)
+
 ## 0.1.3
 
 - Flatten nested live API payloads (`Session` / `GuestInfo`) for details, OS, user, IP, custom properties

@@ -158,7 +158,7 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
   registerGatedTool(server, config, 'get_session_details', {
     title: 'Get session details',
     description:
-      'Get OS, logged-on user, IP/network address, custom properties, online status, and connection info for a session GUID. Nested Session/GuestInfo payloads from the live API are flattened. includeRaw returns a redacted payload (keys, wake tokens, screenshots, serial/MAC stripped).',
+      'Get OS, logged-on user, IP/network address, custom properties, online status, and connection info for a session GUID. Nested Session/GuestInfo payloads from the live API are flattened. includeRaw returns a redacted payload (keys, wake tokens, screenshots, serial/MAC stripped; Events/Connections omitted — use get_session_events).',
     tier: 'read',
     annotations: READ_ONLY,
     method: 'GetSessionDetailsBySessionID',

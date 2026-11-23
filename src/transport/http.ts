@@ -9,7 +9,7 @@ import { createServer } from '../server.js';
  * - Requires Authorization: Bearer <MCP_HTTP_BEARER_TOKEN>
  * - Optional Origin allowlist via MCP_HTTP_ALLOWED_ORIGINS
  *
- * Prefer stdio for production MSP setups. Tool calls over HTTP return 501 in v0.1.3.
+ * Prefer stdio for production MSP setups. Tool calls over HTTP return 501 in v0.1.4.
  */
 export async function startHttp(config: ServerConfig): Promise<{ close: () => Promise<void> }> {
   const token = config.httpBearerToken;
@@ -48,7 +48,7 @@ export async function startHttp(config: ServerConfig): Promise<{ close: () => Pr
     typeof address === 'object' && address ? address.port : config.httpPort;
 
   console.error(
-    `screenconnect-mcp-server 0.1.3 on http://${config.httpHost}:${port}/mcp (mode=${config.mode})`,
+    `screenconnect-mcp-server 0.1.4 on http://${config.httpHost}:${port}/mcp (mode=${config.mode})`,
   );
 
   return {
@@ -96,11 +96,11 @@ async function handleRequest(
     res.end(
       JSON.stringify({
         name: 'screenconnect-mcp-server',
-        version: '0.1.3',
+        version: '0.1.4',
         transport: 'http',
         mode: config.mode,
         requestId: randomUUID(),
-        note: 'Prefer stdio for tool calls. POST JSON-RPC accepts ping/initialize only in v0.1.3.',
+        note: 'Prefer stdio for tool calls. POST JSON-RPC accepts ping/initialize only in v0.1.4.',
       }),
     );
     return;
@@ -135,7 +135,7 @@ async function handleRequest(
             : {
                 protocolVersion: '2024-11-05',
                 capabilities: {},
-                serverInfo: { name: 'screenconnect-mcp-server', version: '0.1.3' },
+                serverInfo: { name: 'screenconnect-mcp-server', version: '0.1.4' },
                 instructions:
                   'HTTP transport is limited. Use stdio MCP for tool execution with this server.',
               },
@@ -152,7 +152,7 @@ async function handleRequest(
       error: {
         code: -32000,
         message:
-          'Tool calls over HTTP are disabled in v0.1.3; use stdio transport (recommended for mcpproxy).',
+          'Tool calls over HTTP are disabled in v0.1.4; use stdio transport (recommended for mcpproxy).',
       },
     }),
   );

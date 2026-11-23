@@ -44,9 +44,17 @@ export type NormalizedSessionView = {
 
 /** Keys always stripped from includeRaw / logs (crypto material, PII hardware ids, screenshots). */
 const SENSITIVE_KEY_RE =
-  /^(GuestPublicKey|HostPublicKey|PublicKey|WakeToken|WakeOnLanToken|GuestScreenshotContent|ScreenshotContent|Screenshot|SerialNumber|GuestMachineSerialNumber|MachineSerialNumber|MacAddress|GuestMacAddress|GuestNetworkMacAddress|MacAddresses|Password|PasswordHash|SharedSecret|AuthToken|Token)$/i;
+  /^(GuestPublicKey|HostPublicKey|PublicKey|WakeToken|WakeOnLanToken|GuestScreenshotContent|ScreenshotContent|Screenshot|SerialNumber|GuestMachineSerialNumber|MachineSerialNumber|HardwareNetworkAddress|MacAddress|GuestMacAddress|GuestNetworkMacAddress|NetworkMacAddress|MacAddresses|AdapterAddress|PhysicalAddress|Password|PasswordHash|SharedSecret|AuthToken|Token)$/i;
 
-/** ScreenConnect SessionEventType codes → readable names (community / product prior art). */
+/** Large session history blobs — omit from includeRaw (use get_session_events instead). */
+const OMIT_RAW_ARRAY_KEYS = new Set([
+  'events',
+  'sessionevents',
+  'connections',
+  'sessionconnections',
+]);
+
+/** ScreenConnect SessionEventType codes → readable names (live API + Rewst/CW prior art). */
 export const SESSION_EVENT_TYPE_NAMES: Record<number, string> = {
   0: 'Created',
   1: 'Destroyed',
@@ -62,6 +70,15 @@ export const SESSION_EVENT_TYPE_NAMES: Record<number, string> = {
   60: 'ReceptionMode',
   70: 'RanCommand',
   71: 'CommandOutput',
+  // Clipboard / file transfer (Rewst SessionEventType table; 87 seen live, after SentFiles)
+  80: 'SentPrintJob',
+  81: 'ReceivedPrintJob',
+  82: 'CopiedText',
+  83: 'CopiedFiles',
+  84: 'DraggedFiles',
+  85: 'RanFiles',
+  86: 'SentFiles',
+  87: 'ReceivedFiles',
 };
 
 function asRecord(v: unknown): Record<string, unknown> | undefined {
@@ -172,7 +189,7 @@ export function unwrapSessionPayload(raw: unknown): {
   return { session, guestInfo, events, connections, root };
 }
 
-/** Deep-clone-ish walk that removes sensitive keys and truncates huge strings. */
+/** Deep-clone-ish walk that removes sensitive keys, omits event/connection dumps, truncates huge strings. */
 export function redactSensitiveFields(value: unknown, depth = 0): unknown {
   if (value == null || depth > 12) return value;
   if (typeof value === 'string') {
@@ -186,6 +203,14 @@ export function redactSensitiveFields(value: unknown, depth = 0): unknown {
   for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
     if (SENSITIVE_KEY_RE.test(k)) {
       out[k] = '[redacted]';
+      continue;
+    }
+    if (OMIT_RAW_ARRAY_KEYS.has(k.toLowerCase()) && Array.isArray(v)) {
+      out[k] = {
+        omitted: true,
+        count: v.length,
+        hint: 'Use get_session_events for event history',
+      };
       continue;
     }
     out[k] = redactSensitiveFields(v, depth + 1);

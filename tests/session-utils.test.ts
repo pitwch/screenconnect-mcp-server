@@ -69,19 +69,31 @@ describe('session utils + fixtures', () => {
     expect(eventTypeName(11)).toBe('Disconnected');
     expect(eventTypeName(30)).toBe('RanToolOrUrl');
     expect(eventTypeName(70)).toBe('RanCommand');
+    expect(eventTypeName(83)).toBe('CopiedFiles');
+    expect(eventTypeName(87)).toBe('ReceivedFiles');
     expect(normalizeEvent({ EventType: 10, Data: 'x' }).eventTypeName).toBe('Connected');
   });
 
   it('redacts sensitive fields for includeRaw', () => {
     const redacted = redactSensitiveFields(nestedDetails) as {
       Session: { GuestInfo: Record<string, unknown> };
+      Events: { omitted: boolean; count: number };
+      Connections: { omitted: boolean; count: number };
     };
     expect(redacted.Session.GuestInfo.GuestPublicKey).toBe('[redacted]');
     expect(redacted.Session.GuestInfo.WakeToken).toBe('[redacted]');
     expect(redacted.Session.GuestInfo.SerialNumber).toBe('[redacted]');
     expect(redacted.Session.GuestInfo.MacAddress).toBe('[redacted]');
+    expect(redacted.Session.GuestInfo.HardwareNetworkAddress).toBe('[redacted]');
     expect(redacted.Session.GuestInfo.GuestScreenshotContent).toBe('[redacted]');
     expect(redacted.Session.GuestInfo.OperatingSystemName).toBe('Windows 11 Pro');
+    expect(redacted.Events).toEqual({
+      omitted: true,
+      count: 4,
+      hint: 'Use get_session_events for event history',
+    });
+    expect(redacted.Connections.omitted).toBe(true);
+    expect(redacted.Connections.count).toBe(1);
   });
 
   it('merges custom property slots from short arrays', () => {
