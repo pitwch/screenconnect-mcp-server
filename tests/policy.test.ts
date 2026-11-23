@@ -86,4 +86,21 @@ describe('audit redaction', () => {
     expect(line).toContain('[redacted]');
     err.mockRestore();
   });
+
+  it('keeps sessionId readable in audit logs', () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const sessionId = '11111111-1111-4111-8111-111111111111';
+    writeAudit({
+      ts: '2026-11-23T00:00:00.000Z',
+      tool: 'get_session_details',
+      tier: 'read',
+      sessionId,
+      ok: true,
+    });
+    const line = String(err.mock.calls[0]?.[0] ?? '');
+    expect(line).toContain(sessionId);
+    expect(line).not.toMatch(/"sessionId"\s*:\s*"\[redacted\]"/);
+    err.mockRestore();
+  });
 });
+

@@ -37,7 +37,7 @@ Each tool invocation emits one JSON line on **stderr** after redaction:
 {"type":"audit","ts":"...","tool":"search_sessions","tier":"read","ok":true}
 ```
 
-Command previews are redacted (password/token patterns) and truncated to 120 characters. Secrets and secret-named fields are never logged.
+Command previews are redacted (password/token patterns) and truncated to 120 characters. Structured fields such as `sessionId` stay readable for operator traceability. Secrets and secret-named fields are never logged.
 
 ## Transport
 

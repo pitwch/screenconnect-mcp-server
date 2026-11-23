@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="ScreenConnect MCP Server">
+  <defs>
+    <linearGradient id="scGrad" x1="70" y1="120" x2="440" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="45%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="#0A0A0A"/>
+
+  <!-- Monitor / remote session glyph -->
+  <rect x="128" y="128" width="256" height="176" rx="20" fill="none" stroke="url(#scGrad)" stroke-width="18"/>
+  <rect x="156" y="156" width="200" height="120" rx="8" fill="url(#scGrad)" opacity="0.25"/>
+  <path d="M210 352 h92" stroke="url(#scGrad)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M192 388 h128" stroke="url(#scGrad)" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- Connection node -->
+  <circle cx="384" cy="160" r="28" fill="url(#scGrad)"/>
+  <circle cx="384" cy="160" r="10" fill="#0A0A0A"/>
+  <path d="M356 176 L300 220" stroke="url(#scGrad)" stroke-width="10" stroke-linecap="round"/>
+</svg>

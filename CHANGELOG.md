@@ -1,14 +1,21 @@
 # Changelog
 
+## 0.1.2
+
+- Audit logs keep `sessionId` readable; only free-text fields (e.g. command previews) are secret-redacted
+- README branding: banner, icon, social preview (ALSO-style), Pedrett footer assets
+- Full ScreenConnect extension setup tutorials (EN/DE): REST secret / `CTRLAuthHeader`
+
 ## 0.1.1
 
 - `create_session` annotations use `destructiveHint: true` (mcpproxy-aligned)
 - Stricter group allowlist matching (exact / path-prefix only); upstream filter AND when configured
-- Audit logs redact command previews; API errors mask password/token patterns beyond UUIDs
+- Audit logs redact command previews; API errors mask password/token patterns
 - `health_check` no longer returns `baseUrl` or unfiltered inventory counts
 - `SCREENCONNECT_BASE_URL` requires `https://`
 - Hardened `mergeCustomProperties` for non-array upstream shapes
 - Ignore `*.live.json` fixture captures
+
 
 ## 0.1.0
 

@@ -1,6 +1,6 @@
 {
   "name": "screenconnect-mcp-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server for ConnectWise ScreenConnect RESTful API Manager (MSP-safe read/write/destructive modes)",
   "type": "module",
   "license": "MIT",
