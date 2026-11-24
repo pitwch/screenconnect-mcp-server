@@ -197,6 +197,19 @@ Live fixture capture (lab instance only): `npm run capture-fixtures`
 
 **Important:** write only MCP JSON-RPC to stdout — log exclusively with `console.error`.
 
+### Releasing
+
+Each `package.json` version gets a GitHub Release (`vX.Y.Z`) with notes from [`CHANGELOG.md`](CHANGELOG.md).
+
+```bash
+# 1. Bump version in package.json + CHANGELOG.md, commit to main
+# 2. Tag and push — CI publishes the release automatically
+git tag -a v0.1.5 -m "v0.1.5"
+git push origin v0.1.5
+```
+
+Releases: https://github.com/pitwch/screenconnect-mcp-server/releases
+
 ---
 
 ## Links
