@@ -1,6 +1,7 @@
 {
   "name": "screenconnect-mcp-server",
   "version": "0.1.4",
+  "mcpName": "io.github.pitwch/screenconnect-mcp-server",
   "description": "MCP server for ConnectWise ScreenConnect RESTful API Manager (MSP-safe read/write/destructive modes)",
   "type": "module",
   "license": "MIT",

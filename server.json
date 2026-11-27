@@ -1,0 +1,58 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.pitwch/screenconnect-mcp-server",
+  "title": "ScreenConnect",
+  "description": "MCP server for ScreenConnect RESTful API Manager: read, write and gated destructive tools",
+  "repository": {
+    "url": "https://github.com/pitwch/screenconnect-mcp-server",
+    "source": "github"
+  },
+  "version": "0.1.4",
+  "websiteUrl": "https://github.com/pitwch/screenconnect-mcp-server#readme",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "screenconnect-mcp-server",
+      "version": "0.1.4",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SCREENCONNECT_BASE_URL",
+          "description": "ScreenConnect instance HTTPS URL, e.g. https://your-instance.example.com (http is rejected)",
+          "isRequired": true,
+          "format": "string"
+        },
+        {
+          "name": "SCREENCONNECT_API_SECRET",
+          "description": "RESTful API Manager extension shared secret (sent as CTRLAuthHeader)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "SCREENCONNECT_MODE",
+          "description": "Tool mode: read (default), write or destructive",
+          "isRequired": false,
+          "format": "string",
+          "default": "read",
+          "choices": ["read", "write", "destructive"]
+        },
+        {
+          "name": "SCREENCONNECT_ENABLE_COMMANDS",
+          "description": "Must be true to expose destructive tools (commands, toolbox, create_session)",
+          "isRequired": false,
+          "format": "string",
+          "default": "false"
+        },
+        {
+          "name": "SCREENCONNECT_ALLOWED_GROUPS",
+          "description": "Optional comma-separated full session group paths. Leave empty unless group fields are returned by your instance",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
