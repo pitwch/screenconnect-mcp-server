@@ -22,7 +22,7 @@
     "modelcontextprotocol"
   ],
   "bin": {
-    "screenconnect-mcp-server": "./dist/index.js"
+    "screenconnect-mcp-server": "dist/index.js"
   },
   "files": [
     "dist",

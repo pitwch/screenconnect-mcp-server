@@ -4,6 +4,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      skip_npm_publish:
+        description: "Skip npm publish (use if version is already published or queued on npm)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -11,7 +16,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     permissions:
       contents: read
       id-token: write
@@ -31,10 +36,47 @@ jobs:
       - run: npm test
       - run: npm run build
 
-      - name: Publish npm package
-        run: npm publish --access public
+      - name: Read package name and version
+        id: pkg
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish npm package (if not already live)
+        if: ${{ inputs.skip_npm_publish != true }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PKG_NAME: ${{ steps.pkg.outputs.name }}
+          PKG_VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          set -euo pipefail
+          status=$(curl -s -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/${PKG_NAME}/${PKG_VERSION}")
+          if [ "$status" = "200" ]; then
+            echo "${PKG_NAME}@${PKG_VERSION} is already live on npm; skipping npm publish."
+          else
+            npm publish --access public
+          fi
+
+      - name: Wait for npm package version to become available
+        env:
+          PKG_NAME: ${{ steps.pkg.outputs.name }}
+          PKG_VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          set -euo pipefail
+          url="https://registry.npmjs.org/${PKG_NAME}/${PKG_VERSION}"
+          for attempt in $(seq 1 100); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+            if [ "$status" = "200" ]; then
+              echo "${PKG_NAME}@${PKG_VERSION} is live on npm (attempt ${attempt})."
+              exit 0
+            fi
+            echo "Waiting for ${PKG_NAME}@${PKG_VERSION} on npm (HTTP ${status}, attempt ${attempt}/100)..."
+            sleep 15
+          done
+          echo "Timed out waiting for ${PKG_NAME}@${PKG_VERSION} on npm." >&2
+          exit 1
 
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
