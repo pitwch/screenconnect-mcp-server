@@ -1,0 +1,116 @@
+{
+  "manifest_version": "0.3",
+  "name": "screenconnect-mcp-server",
+  "display_name": "ScreenConnect MCP Server",
+  "version": "0.2.0",
+  "description": "MSP-safe MCP server for ConnectWise ScreenConnect via the RESTful API Manager extension.",
+  "long_description": "Connect Claude Desktop to ConnectWise ScreenConnect using the ConnectWise Labs RESTful API Manager extension secret (no admin passwords required). Defaults to read-only mode with code-enforced read / write / destructive tiers, session group allowlists, dry-run previews, and audit logging.",
+  "author": {
+    "name": "Pedrett IT+Web AG",
+    "url": "https://www.pitw.ch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pitwch/screenconnect-mcp-server"
+  },
+  "homepage": "https://www.npmjs.com/package/screenconnect-mcp-server",
+  "documentation": "https://github.com/pitwch/screenconnect-mcp-server/blob/main/docs/extension-setup.md",
+  "support": "https://github.com/pitwch/screenconnect-mcp-server/issues",
+  "icon": "icon.png",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "screenconnect",
+    "connectwise",
+    "msp",
+    "rmm"
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.cjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.cjs"],
+      "env": {
+        "SCREENCONNECT_BASE_URL": "${user_config.baseUrl}",
+        "SCREENCONNECT_API_SECRET": "${user_config.apiSecret}",
+        "SCREENCONNECT_MODE": "${user_config.mode}",
+        "SCREENCONNECT_ALLOWED_GROUPS": "${user_config.allowedGroups}",
+        "SCREENCONNECT_ORIGIN": "${user_config.origin}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "health_check",
+      "description": "Verify ScreenConnect reachability and CTRLAuthHeader authentication."
+    },
+    {
+      "name": "list_sessions",
+      "description": "List ScreenConnect sessions with structured filters (name, group, onlineOnly, offlineOnly, OS, user)."
+    },
+    {
+      "name": "search_sessions",
+      "description": "Search ScreenConnect sessions by structured fields or raw GetSessionsByFilter expression."
+    },
+    {
+      "name": "get_session",
+      "description": "Fetch a single normalized session by GUID via GetSessionBySessionID."
+    },
+    {
+      "name": "get_session_details",
+      "description": "Fetch detailed session telemetry, network addresses, and custom properties."
+    },
+    {
+      "name": "get_session_events",
+      "description": "Fetch recent session events with readable eventTypeName."
+    },
+    {
+      "name": "get_server_info",
+      "description": "Inspect active server mode, enabled tiers, and allowlist status."
+    }
+  ],
+  "tools_generated": true,
+  "user_config": {
+    "baseUrl": {
+      "type": "string",
+      "title": "ScreenConnect Base URL",
+      "description": "HTTPS base URL of your ScreenConnect instance (e.g. https://control.example.com).",
+      "required": true
+    },
+    "apiSecret": {
+      "type": "string",
+      "title": "RESTful API Manager Secret",
+      "description": "RESTfulAuthenticationSecret configured in the ConnectWise Labs RESTful API Manager extension (sent as CTRLAuthHeader).",
+      "required": true,
+      "sensitive": true
+    },
+    "mode": {
+      "type": "string",
+      "title": "Safety Mode",
+      "description": "Execution tier: read (default, read-only) or write (adds notes, messages, rename, custom properties). Destructive mode requires explicit CLI/env configuration.",
+      "required": false,
+      "default": "read"
+    },
+    "allowedGroups": {
+      "type": "string",
+      "title": "Allowed Session Groups (optional)",
+      "description": "Comma-separated full session group paths to scope access (e.g. All Machines/Contoso). Leave empty for all groups.",
+      "required": false,
+      "default": ""
+    },
+    "origin": {
+      "type": "string",
+      "title": "Allowed Origin Header (optional)",
+      "description": "Optional Origin header if RESTfulAllowedOrigin is configured in the extension settings.",
+      "required": false,
+      "default": ""
+    }
+  }
+}
