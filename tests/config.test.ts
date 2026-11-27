@@ -37,13 +37,40 @@ describe('loadConfigFromEnv', () => {
     expect(cfg.allowedGroups).toEqual(['All Machines/Contoso', 'Fabrikam']);
   });
 
-  it('requires bearer token for http transport', () => {
+  it('requires bearer token of at least 32 chars for http transport', () => {
     expect(() =>
       loadConfigFromEnv({
         ...baseEnv,
         MCP_TRANSPORT: 'http',
       }),
     ).toThrow(/MCP_HTTP_BEARER_TOKEN/);
+
+    expect(() =>
+      loadConfigFromEnv({
+        ...baseEnv,
+        MCP_TRANSPORT: 'http',
+        MCP_HTTP_BEARER_TOKEN: 'short-token',
+      }),
+    ).toThrow(/at least 32 characters/);
+
+    const cfg = loadConfigFromEnv({
+      ...baseEnv,
+      MCP_TRANSPORT: 'http',
+      MCP_HTTP_BEARER_TOKEN: 'x'.repeat(32),
+    });
+    expect(cfg.transport).toBe('http');
+    expect(cfg.httpBearerToken).toBe('x'.repeat(32));
+  });
+
+  it('caps SCREENCONNECT_MAX_RESPONSE_BYTES at 50 MiB with 10 MiB default', () => {
+    const defaults = loadConfigFromEnv({ ...baseEnv });
+    expect(defaults.maxResponseBytes).toBe(10_485_760);
+
+    const capped = loadConfigFromEnv({
+      ...baseEnv,
+      SCREENCONNECT_MAX_RESPONSE_BYTES: '999999999',
+    });
+    expect(capped.maxResponseBytes).toBe(52_428_800);
   });
 
   it('rejects embedded credentials in base URL', () => {

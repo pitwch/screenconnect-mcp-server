@@ -1,4 +1,7 @@
 export const DEFAULT_EXTENSION_ID = '2d558935-686a-4bd0-9991-07539f5fe749';
+export const MIN_HTTP_BEARER_TOKEN_LENGTH = 32;
+export const DEFAULT_MAX_RESPONSE_BYTES = 10_485_760;
+export const MAX_RESPONSE_BYTES_LIMIT = 52_428_800;
 
 export type ServerMode = 'read' | 'write' | 'destructive';
 
@@ -12,6 +15,7 @@ export type ServerConfig = {
   enableCommands: boolean;
   timeoutMs: number;
   maxCommandOutputChars: number;
+  maxResponseBytes: number;
   transport: 'stdio' | 'http';
   httpHost: string;
   httpPort: number;
@@ -99,8 +103,15 @@ export function loadConfigFromEnv(env: NodeJS.ProcessEnv = process.env): ServerC
   }
 
   const httpBearerToken = env.MCP_HTTP_BEARER_TOKEN?.trim() || undefined;
-  if (transportRaw === 'http' && !httpBearerToken) {
-    throw new Error('MCP_TRANSPORT=http requires MCP_HTTP_BEARER_TOKEN');
+  if (transportRaw === 'http') {
+    if (!httpBearerToken) {
+      throw new Error('MCP_TRANSPORT=http requires MCP_HTTP_BEARER_TOKEN');
+    }
+    if (httpBearerToken.length < MIN_HTTP_BEARER_TOKEN_LENGTH) {
+      throw new Error(
+        `MCP_HTTP_BEARER_TOKEN must be at least ${MIN_HTTP_BEARER_TOKEN_LENGTH} characters for http transport`,
+      );
+    }
   }
 
   const origin = env.SCREENCONNECT_ORIGIN?.trim() || undefined;
@@ -126,6 +137,11 @@ export function loadConfigFromEnv(env: NodeJS.ProcessEnv = process.env): ServerC
       env.SCREENCONNECT_MAX_COMMAND_OUTPUT_CHARS,
       16_000,
       1_000_000,
+    ),
+    maxResponseBytes: parsePositiveInt(
+      env.SCREENCONNECT_MAX_RESPONSE_BYTES,
+      DEFAULT_MAX_RESPONSE_BYTES,
+      MAX_RESPONSE_BYTES_LIMIT,
     ),
     transport: transportRaw,
     httpHost: (env.MCP_HTTP_HOST ?? '127.0.0.1').trim() || '127.0.0.1',

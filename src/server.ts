@@ -8,12 +8,13 @@ import { registerDestructiveTools } from './tools/destructive.js';
 import { LOCAL_READ_ONLY, registerGatedTool } from './tools/helpers.js';
 import { registerReadTools } from './tools/read.js';
 import { registerWriteTools } from './tools/write.js';
+import { SERVER_VERSION } from './version.js';
 
 export function createServer(config: ServerConfig = loadConfigFromEnv()): McpServer {
   const server = new McpServer(
     {
       name: 'screenconnect-mcp-server',
-      version: '0.1.5',
+      version: SERVER_VERSION,
     },
     { instructions: SERVER_INSTRUCTIONS },
   );
@@ -27,7 +28,7 @@ export function createServer(config: ServerConfig = loadConfigFromEnv()): McpSer
     inputSchema: z.object({}),
     handler: async () => ({
       name: 'screenconnect-mcp-server',
-      version: '0.1.5',
+      version: SERVER_VERSION,
       mode: config.mode,
       enableCommands: config.enableCommands,
       enabledTiers: listEnabledTiers(config.mode, config.enableCommands),

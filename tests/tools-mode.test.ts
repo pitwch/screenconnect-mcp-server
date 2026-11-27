@@ -12,6 +12,7 @@ function baseConfig(over: Partial<ServerConfig> = {}): ServerConfig {
     enableCommands: false,
     timeoutMs: 5000,
     maxCommandOutputChars: 16000,
+    maxResponseBytes: 10_485_760,
     transport: 'stdio',
     httpHost: '127.0.0.1',
     httpPort: 8080,
