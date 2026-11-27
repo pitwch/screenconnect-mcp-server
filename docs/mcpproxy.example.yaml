@@ -1,30 +1,42 @@
-# Example mcpproxy upstream entry — stdio only for production.
-# Do not use MCP_TRANSPORT=http for tool routing (v0.1.x returns 501 for tools).
-# Adjust command path after npm run build / Docker image install.
+# Example mcpproxy upstream entry — stdio (recommended default) or Streamable HTTP.
+# Start with SCREENCONNECT_MODE=read before enabling write or destructive tools.
 
 servers:
   - name: screenconnect
-    command: node
+    command: npx
     args:
-      - /opt/screenconnect-mcp-server/dist/index.js
+      - -y
+      - screenconnect-mcp-server
     env:
       SCREENCONNECT_BASE_URL: https://your-instance.example.com
       SCREENCONNECT_API_SECRET: ${SCREENCONNECT_API_SECRET}
       SCREENCONNECT_MODE: read
       SCREENCONNECT_ENABLE_COMMANDS: "false"
-      # Full session-group paths only (not short tokens like "IT")
-      SCREENCONNECT_ALLOWED_GROUPS: All Machines/Contoso
+      # Full session-group paths only (leave empty if your instance omits group fields)
+      SCREENCONNECT_ALLOWED_GROUPS: ""
     # Prefer mcpproxy read_only_only until write/destructive is approved
     # read_only_only: true
 
+# Optional: Streamable HTTP upstream (single-tenant Docker / remote server)
+#
+# servers:
+#   - name: screenconnect
+#     url: http://127.0.0.1:8080/mcp
+#     headers:
+#       Authorization: Bearer ${MCP_HTTP_BEARER_TOKEN}
 
-# Optional Docker (internal network / loopback only — do not publish publicly)
+# Optional Docker Compose (internal network / loopback only — terminate TLS for remote access)
 #
 # services:
 #   screenconnect-mcp:
-#     image: ghcr.io/pitwch/screenconnect-mcp-server:0.1.0
-#     network_mode: "service:mcpproxy"   # or expose 127.0.0.1 only
+#     image: ghcr.io/pitwch/screenconnect-mcp-server:0.2.0
+#     ports:
+#       - "127.0.0.1:8080:8080"
 #     environment:
 #       SCREENCONNECT_BASE_URL: https://your-instance.example.com
 #       SCREENCONNECT_API_SECRET: ${SCREENCONNECT_API_SECRET}
 #       SCREENCONNECT_MODE: read
+#       MCP_TRANSPORT: http
+#       MCP_HTTP_HOST: 0.0.0.0
+#       MCP_HTTP_PORT: "8080"
+#       MCP_HTTP_BEARER_TOKEN: ${MCP_HTTP_BEARER_TOKEN} # >= 32 chars

@@ -1,14 +1,14 @@
 {
   "mcpServers": {
     "screenconnect": {
-      "command": "node",
-      "args": ["/path/to/screenconnect-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "screenconnect-mcp-server"],
       "env": {
         "SCREENCONNECT_BASE_URL": "https://your-instance.example.com",
         "SCREENCONNECT_API_SECRET": "your-restful-api-manager-secret",
         "SCREENCONNECT_MODE": "read",
         "SCREENCONNECT_ENABLE_COMMANDS": "false",
-        "SCREENCONNECT_ALLOWED_GROUPS": "All Machines/Contoso"
+        "SCREENCONNECT_ALLOWED_GROUPS": ""
       }
     }
   }

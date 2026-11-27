@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+- **Streamable HTTP transport (`MCP_TRANSPORT=http`):** full single-tenant MCP Streamable HTTP on `/mcp` backed by `@modelcontextprotocol/server` `createMcpHandler` with constant-time Bearer auth (`MCP_HTTP_BEARER_TOKEN` ≥ 32 chars), DNS-rebinding `Host` protection, `Origin` allowlist (`MCP_HTTP_ALLOWED_ORIGINS`), 1 MiB request body cap, and unauthenticated `GET /health`
+- **Client response size cap:** abort oversized upstream ScreenConnect responses above `SCREENCONNECT_MAX_RESPONSE_BYTES` (default 10 MiB, max 50 MiB) with actionable filter guidance
+- **New read capabilities:** lightweight `get_session` tool (`GetSessionBySessionID`) and `offlineOnly` filter on `list_sessions` / `search_sessions` (`GuestConnectedCount = 0`, mutually exclusive with `onlineOnly`)
+- **Write safety (`dryRun`):** optional `dryRun: true` preview mode on `add_session_note`, `send_message_to_session`, `update_session_name`, and `update_custom_properties` (validates allowlist & target session without mutating ScreenConnect)
+- **Destructive target guard (`expectedName`):** optional case-insensitive `expectedName` verification against session `name` or `machineName` on `send_command_to_session` and `send_toolbox_item` before queuing (`PolicyError: target_mismatch`)
+- **Claude Desktop one-click bundle (`.mcpb`):** self-contained Node bundle (`npm run build:mcpb`) automatically attached to every GitHub Release
+- **Docs & quickstart:** `npx -y screenconnect-mcp-server` quickstart, npm & MCP Registry badges, Streamable HTTP & `.mcpb` setup instructions
+
 ## 0.1.5
 
 - Official MCP Registry metadata (`server.json`, `io.github.pitwch/screenconnect-mcp-server`)
