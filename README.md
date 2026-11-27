@@ -210,7 +210,7 @@ git push origin v0.1.5
 
 Releases: https://github.com/pitwch/screenconnect-mcp-server/releases
 
-The `publish-mcp.yml` workflow publishes the npm package and then `server.json` to the [official MCP Registry](https://registry.modelcontextprotocol.io) (`io.github.pitwch/screenconnect-mcp-server`). It needs the repository secret `NPM_TOKEN`; registry auth uses GitHub OIDC. Keep `version` in `package.json` and `server.json` in sync.
+The `publish-mcp.yml` workflow publishes the npm package and then `server.json` to the [official MCP Registry](https://registry.modelcontextprotocol.io) (`io.github.pitwch/screenconnect-mcp-server`). Both npm (Trusted Publishing) and the MCP Registry authenticate via GitHub Actions OIDC — no long-lived tokens required. Keep `version` in `package.json` and `server.json` in sync.
 
 ---
 
