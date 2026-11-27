@@ -1,7 +1,7 @@
 import type { ServerConfig } from '../config.js';
 import { toApiError } from './errors.js';
 
-const USER_AGENT = 'screenconnect-mcp-server/0.1.4';
+const USER_AGENT = 'screenconnect-mcp-server/0.1.5';
 
 export type CallOptions = {
   /** Override configured timeout (e.g. long-running command poll). */

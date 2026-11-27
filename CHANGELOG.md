@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+- Official MCP Registry metadata (`server.json`, `io.github.pitwch/screenconnect-mcp-server`)
+- Automated npm + MCP Registry publishing via GitHub Actions OIDC (Trusted Publishing + provenance)
+- Normalize `bin` entry in `package.json`
+
 ## 0.1.4
 
 - `includeRaw` also redacts `HardwareNetworkAddress` (MAC) and omits Events/Connections dumps
