@@ -13,14 +13,44 @@ import {
   fetchSessionById,
   fetchSessionDetails,
   findCommandOutputEvents,
+  summarizeSession,
 } from './session-utils.js';
 
 const confirmSchema = z
   .literal(true)
   .describe('Must be true to execute this destructive action');
 
+const expectedNameSchema = z
+  .string()
+  .min(1)
+  .max(256)
+  .optional()
+  .describe(
+    'Optional safety guard: must match the target session name or machineName (case-insensitive) before queuing',
+  );
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function assertExpectedTargetName(
+  sessionRaw: unknown,
+  expectedName: string | undefined,
+  sessionId: string,
+): void {
+  if (!expectedName) return;
+  const expected = expectedName.trim().toLowerCase();
+  const summary = summarizeSession(sessionRaw);
+  const candidates = [summary.name, summary.machineName]
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+    .map((v) => v.trim().toLowerCase());
+
+  if (!candidates.includes(expected)) {
+    throw new PolicyError(
+      'target_mismatch',
+      `Target mismatch for session ${sessionId}: expected "${expectedName}", got name="${summary.name ?? ''}", machineName="${summary.machineName ?? ''}".`,
+    );
+  }
 }
 
 function buildCommandText(command: string, shell: 'cmd' | 'powershell', timeoutSeconds?: number): string {
@@ -41,7 +71,7 @@ export function registerDestructiveTools(server: McpServer, config: ServerConfig
   registerGatedTool(server, config, 'send_command_to_session', {
     title: 'Send command to session',
     description:
-      '⚠ HIGH-IMPACT: queue a cmd/PowerShell command on the guest (SendCommandToSession). Requires confirm=true and SCREENCONNECT_ENABLE_COMMANDS=true. Optionally poll for RanCommand output.',
+      '⚠ HIGH-IMPACT: queue a cmd/PowerShell command on the guest (SendCommandToSession). Requires confirm=true and SCREENCONNECT_ENABLE_COMMANDS=true. Optionally pass expectedName to verify target identity and waitForOutputSeconds to poll for RanCommand output.',
     tier: 'destructive',
     annotations: WRITE_IRREVERSIBLE,
     method: 'SendCommandToSession',
@@ -58,6 +88,7 @@ export function registerDestructiveTools(server: McpServer, config: ServerConfig
         .optional()
         .default(0)
         .describe('If > 0, poll session details for command output events'),
+      expectedName: expectedNameSchema,
       confirm: confirmSchema,
     }),
     sessionIdFromArgs: (a) => a.sessionId,
@@ -66,7 +97,8 @@ export function registerDestructiveTools(server: McpServer, config: ServerConfig
       if (args.confirm !== true) {
         throw new PolicyError('confirm_required', 'confirm must be true');
       }
-      await fetchSessionById(cfg, args.sessionId);
+      const session = await fetchSessionById(cfg, args.sessionId);
+      assertExpectedTargetName(session, args.expectedName, args.sessionId);
       const commandText = buildCommandText(
         args.command,
         args.shell ?? 'cmd',
@@ -110,22 +142,24 @@ export function registerDestructiveTools(server: McpServer, config: ServerConfig
   registerGatedTool(server, config, 'send_toolbox_item', {
     title: 'Send toolbox item',
     description:
-      '⚠ HIGH-IMPACT: run a named toolbox item on the guest (SendToolboxItemToSession). Requires confirm=true.',
+      '⚠ HIGH-IMPACT: run a named toolbox item on the guest (SendToolboxItemToSession). Requires confirm=true. Optionally pass expectedName to verify target identity before execution.',
     tier: 'destructive',
     annotations: WRITE_IRREVERSIBLE,
     method: 'SendToolboxItemToSession',
     inputSchema: z.object({
       sessionId: sessionIdSchema,
       toolboxItemName: z.string().min(1).max(256),
+      expectedName: expectedNameSchema,
       confirm: confirmSchema,
     }),
     sessionIdFromArgs: (a) => a.sessionId,
     commandPreviewFromArgs: (a) => a.toolboxItemName,
-    handler: async ({ sessionId, toolboxItemName, confirm }, cfg) => {
+    handler: async ({ sessionId, toolboxItemName, expectedName, confirm }, cfg) => {
       if (confirm !== true) {
         throw new PolicyError('confirm_required', 'confirm must be true');
       }
-      await fetchSessionById(cfg, sessionId);
+      const session = await fetchSessionById(cfg, sessionId);
+      assertExpectedTargetName(session, expectedName, sessionId);
       const client = getSharedClient(cfg);
       await client.call('SendToolboxItemToSession', [sessionId, toolboxItemName]);
       return { ok: true, sessionId, toolboxItemName, action: 'send_toolbox_item' };

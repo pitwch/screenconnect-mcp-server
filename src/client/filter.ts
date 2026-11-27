@@ -5,6 +5,7 @@ export type SessionSearchInput = {
   group?: string;
   sessionType?: 'Access' | 'Support' | 'Meeting';
   onlineOnly?: boolean;
+  offlineOnly?: boolean;
   machineName?: string;
   loggedOnUser?: string;
   operatingSystem?: string;
@@ -31,6 +32,7 @@ export function buildSessionFilter(input: SessionSearchInput): string {
       input.group !== undefined ||
       input.sessionType !== undefined ||
       input.onlineOnly !== undefined ||
+      input.offlineOnly !== undefined ||
       input.machineName !== undefined ||
       input.loggedOnUser !== undefined ||
       input.operatingSystem !== undefined ||
@@ -67,8 +69,14 @@ export function buildSessionFilter(input: SessionSearchInput): string {
   if (input.operatingSystem) {
     parts.push(`GuestOperatingSystemName LIKE ${likeLiteral(input.operatingSystem)}`);
   }
+  if (input.onlineOnly && input.offlineOnly) {
+    throw new Error('onlineOnly and offlineOnly cannot both be true');
+  }
   if (input.onlineOnly) {
     parts.push('GuestConnectedCount > 0');
+  }
+  if (input.offlineOnly) {
+    parts.push('GuestConnectedCount = 0');
   }
   if (input.customProperties) {
     for (const [key, value] of Object.entries(input.customProperties)) {

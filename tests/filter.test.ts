@@ -29,4 +29,14 @@ describe('buildSessionFilter', () => {
       "CustomProperty1 LIKE '*Critical*'",
     );
   });
+
+  it('supports offlineOnly and rejects combining onlineOnly with offlineOnly', () => {
+    expect(buildSessionFilter({ offlineOnly: true })).toBe('GuestConnectedCount = 0');
+    expect(() => buildSessionFilter({ onlineOnly: true, offlineOnly: true })).toThrow(
+      /cannot both be true/,
+    );
+    expect(() => buildSessionFilter({ filter: "Name = 'x'", offlineOnly: true })).toThrow(
+      /cannot be combined/,
+    );
+  });
 });

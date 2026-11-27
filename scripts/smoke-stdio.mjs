@@ -78,7 +78,7 @@ async function main() {
   const tools = listed?.result?.tools ?? [];
   const names = tools.map((t) => t.name);
 
-  const required = ['health_check', 'list_sessions', 'search_sessions', 'get_session_details', 'get_session_events'];
+  const required = ['health_check', 'list_sessions', 'search_sessions', 'get_session', 'get_session_details', 'get_session_events'];
   for (const name of required) {
     if (!names.includes(name)) {
       throw new Error(`missing read tool: ${name}; got ${names.join(', ')}`);

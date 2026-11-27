@@ -85,4 +85,48 @@ describe('ScreenConnectClient', () => {
     });
     await expect(client.call('GetSessionsByFilter', ['x'])).rejects.toThrow(/HTTP 403/);
   });
+
+  it('aborts when Content-Length exceeds maxResponseBytes', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response('small', {
+          status: 200,
+          headers: { 'Content-Length': '2048' },
+        }),
+      ),
+    );
+    const client = new ScreenConnectClient({
+      baseUrl: 'https://control.example.com',
+      extensionId: '2d558935-686a-4bd0-9991-07539f5fe749',
+      apiSecret: 'test-secret',
+      timeoutMs: 5000,
+      maxResponseBytes: 1024,
+    });
+    await expect(client.call('GetSessionsByFilter', ['x'])).rejects.toThrow(/exceeds 1024 byte limit/);
+  });
+
+  it('aborts when streamed body exceeds maxResponseBytes without Content-Length', async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('a'.repeat(600)));
+        controller.enqueue(new TextEncoder().encode('b'.repeat(600)));
+        controller.close();
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(stream, { status: 200 })),
+    );
+    const client = new ScreenConnectClient({
+      baseUrl: 'https://control.example.com',
+      extensionId: '2d558935-686a-4bd0-9991-07539f5fe749',
+      apiSecret: 'test-secret',
+      timeoutMs: 5000,
+      maxResponseBytes: 1000,
+    });
+    await expect(client.call('GetSessionsByFilter', ['x'])).rejects.toThrow(
+      /exceeded 1000 byte limit.*Narrow your filter/,
+    );
+  });
 });

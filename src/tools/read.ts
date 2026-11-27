@@ -12,6 +12,7 @@ import { paginate, READ_ONLY, registerGatedTool, sessionIdSchema } from './helpe
 import {
   asSessionArray,
   extractEvents,
+  fetchSessionById,
   fetchSessionDetails,
   normalizeEvent,
   normalizeSession,
@@ -30,6 +31,10 @@ const searchFields = {
   group: z.string().optional().describe('Session group path/name fragment'),
   sessionType: z.enum(['Access', 'Support', 'Meeting']).optional(),
   onlineOnly: z.boolean().optional().describe('Only sessions with GuestConnectedCount > 0'),
+  offlineOnly: z
+    .boolean()
+    .optional()
+    .describe('Only sessions with GuestConnectedCount = 0 (mutually exclusive with onlineOnly)'),
   machineName: z.string().optional(),
   loggedOnUser: z.string().optional(),
   operatingSystem: z.string().optional(),
@@ -153,6 +158,23 @@ export function registerReadTools(server: McpServer, config: ServerConfig): void
     method: 'GetSessionsByFilter',
     inputSchema: z.object(searchFields),
     handler: async (args, cfg) => searchSessions(cfg, args),
+  });
+
+  registerGatedTool(server, config, 'get_session', {
+    title: 'Get session',
+    description:
+      'Fetch a single session by GUID via GetSessionBySessionID (lighter and faster than get_session_details when event history and connection lists are not needed). Allowlist-checked and normalized.',
+    tier: 'read',
+    annotations: READ_ONLY,
+    method: 'GetSessionBySessionID',
+    inputSchema: z.object({
+      sessionId: sessionIdSchema,
+    }),
+    sessionIdFromArgs: (a) => a.sessionId,
+    handler: async ({ sessionId }, cfg) => {
+      const session = await fetchSessionById(cfg, sessionId);
+      return summarizeSession(session);
+    },
   });
 
   registerGatedTool(server, config, 'get_session_details', {
